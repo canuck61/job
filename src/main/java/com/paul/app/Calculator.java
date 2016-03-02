@@ -23,12 +23,11 @@ import com.paul.utils.log.SimpleLogger.Level;
  */
 public class Calculator {
 
-	public static final String ADD = "add";
-	public static final String SUB = "sub";
-	public static final String MULT = "mult";
-	public static final String DIV = "div";
-	public static final String LET = "let";
-
+	private static final String ADD = "add";
+	private static final String SUB = "sub";
+	private static final String MULT = "mult";
+	private static final String DIV = "div";
+	private static final String LET = "let";
 	private static final SimpleLogger logger = SimpleLogger.getInstance();
 
 	/**
@@ -37,68 +36,36 @@ public class Calculator {
 	public static void main(String[] args) {
 
 		Integer answer = null;
-		ArrayDeque<String> workingStack;
 		String expression = null;
+		ArrayDeque<String> expressionStack;
 
 		expression = processCommandLine(args);
-		
+
 		if (expression != null) {
 
-			workingStack = buildWorkingStack(expression);
+			try {
+				expressionStack = buildWorkingStack(expression);
 
-			answer = evaluateStack(workingStack);
+				answer = evaluateStack(expressionStack);
 
-			if (answer != null) {
-				System.out.println("My Answer: " + answer);
-				logger.logMessage(Level.INFO, "My Answer: " + answer);
-			} else {
-				System.err.println("Something Wrong");
-				logger.logMessage(Level.ERROR, "Something Wrong");
+				if (answer != null) {
+					String message = "Expression Answer: " + answer;
+					System.out.println(message);
+					logger.logMessage(Level.INFO, message);
+				} else {
+					String message = "No answer could be evaluated.";
+					writeErrortoConsole(message, null);
+					logger.logMessage(Level.ERROR, message);
+				}
+
+			} catch (Exception e) {
+				String message = "Program exited abnormally";
+				writeErrortoConsole(message, null);
+				logger.logMessage(Level.ERROR, message, e);
 			}
-		}
-		
 
-	}
-
-	static boolean isOperator(String token) {
-		return token.equalsIgnoreCase(ADD) || token.equalsIgnoreCase(SUB) || token.equalsIgnoreCase(DIV)
-				|| token.equalsIgnoreCase(MULT) || token.equalsIgnoreCase(LET);
-	}
-
-	static boolean isMathOperator(String token) {
-		return token.equalsIgnoreCase(ADD) || token.equalsIgnoreCase(SUB) || token.equalsIgnoreCase(DIV)
-				|| token.equalsIgnoreCase(MULT);
-	}
-
-	static boolean isVariable(String token) {
-		return (token.matches("[a-z,A-Z]"));
-	}
-
-	// int true or false
-	static boolean isInt(String token) {
-		boolean isInt = false;
-
-		try {
-			Integer.parseInt(token);
-			isInt = true;
-		} catch (NumberFormatException nex) {
-			// ignore
 		}
 
-		return isInt;
-	}
-
-	// returns Integer or null
-	static Integer getInt(String token) {
-		Integer myInteger = null;
-
-		try {
-			myInteger = Integer.parseInt(token);
-		} catch (NumberFormatException nex) {
-			// ignore
-		}
-
-		return myInteger;
 	}
 
 	private static String processCommandLine(String[] args) {
@@ -114,14 +81,12 @@ public class Calculator {
 		Options options = new Options();
 
 		Option help = new Option("h", "print this message");
-		Option version = new Option("v", "print the version information and exit");
 		Option error = new Option("error", "error log level");
 		Option info = new Option("info", "info logging level");
 		Option debug = new Option("debug", "debug logging level");
 
 		// add t option
 		options.addOption(help);
-		options.addOption(version);
 		options.addOption(error);
 		options.addOption(info);
 		options.addOption(debug);
@@ -164,22 +129,16 @@ public class Calculator {
 
 	}
 
-	private static Integer eval(String operator, Integer x, Integer y) throws AssertionError {
-
-		if (ADD.equalsIgnoreCase(operator)) {
-			return x + y;
-		} else if (SUB.equalsIgnoreCase(operator)) {
-			return x - y;
-		} else if (MULT.equalsIgnoreCase(operator)) {
-			return x * y;
-		} else if (DIV.equalsIgnoreCase(operator)) {
-			return x / y;
-		}
-		throw new AssertionError("Unknown operator: " + operator);
-	}
-
-	// build a stack to work off of and validate the expression is correct
-	private static ArrayDeque<String> buildWorkingStack(String inputExpression) {
+	// build a stack to work off of and validate the expression tokens
+	/**
+	 * Build an expression stack and validates the expression types
+	 * 
+	 * @param inputExpression
+	 * @return ArrayDeque<String> stack of the elements of the expression in
+	 *         reverse polish notation
+	 * @throws Exception
+	 */
+	private static ArrayDeque<String> buildWorkingStack(String inputExpression) throws Exception {
 
 		String element = null;
 		ArrayDeque<String> workingStack = new ArrayDeque<String>();
@@ -189,17 +148,18 @@ public class Calculator {
 			String testing = inputExpression.replaceAll("[ ]", "");
 			testing = testing.replaceAll("[,()]+", " ");
 			String exp[] = testing.split(" ");
-		
-            // put in proper order
+
+			// put in proper order
 			for (int i = exp.length - 1; i >= 0; --i) {
 
-				element = exp[i];
-				
+				// force all input characters to lowercase
+				element = exp[i].toLowerCase();
+
 				if (isOperator(element) || isVariable(element) || isInt(element)) {
 					workingStack.push(element);
 				} else {
 					System.err.println("Error: Element: " + element + " is not a valid element type.");
-					System.err.println("Valid types are: ");
+					throw new Exception(" Element: " + element + " is not a valid element type.");
 				}
 			}
 		}
@@ -208,7 +168,16 @@ public class Calculator {
 
 	}
 
-	private static Integer evaluateStack(ArrayDeque<String> workingStack) {
+	/**
+	 * Evaluates the expression
+	 * 
+	 * @param workingStack
+	 *            elements of the expression in reverse polish notation
+	 * @return Integer answer of expression or null if expression cannot be
+	 *         evaluated
+	 * @throws Exception
+	 */
+	private static Integer evaluateStack(ArrayDeque<String> workingStack) throws Exception {
 
 		String arg1;
 		String arg2;
@@ -234,13 +203,12 @@ public class Calculator {
 					// see if value for variable in hash map
 					if (varValPair.containsKey(arg1)) {
 						String tempValue = varValPair.get(arg1);
-						arg1 = tempValue;
-						intValue1 = getInt(arg1);
+						intValue1 = getInt(tempValue);
 					}
 				} else if (isInt(arg1)) {
 					intValue1 = getInt(arg1);
 				} else if (isOperator(arg1)) {
-					intValue1 = performOperation2(arg1, workingStack, varValPair);
+					intValue1 = performOperation(arg1, workingStack, varValPair);
 				}
 
 				arg2 = workingStack.pop();
@@ -249,14 +217,13 @@ public class Calculator {
 					if (varValPair.containsKey(arg2)) {
 						;
 						String tempValue = varValPair.get(arg2);
-						arg2 = tempValue;
-						intValue2 = getInt(arg2);
+						intValue2 = getInt(tempValue);
 					}
 
 				} else if (isInt(arg2)) {
 					intValue2 = getInt(arg2);
 				} else if (isOperator(arg2)) {
-					intValue2 = performOperation2(arg2, workingStack, varValPair);
+					intValue2 = performOperation(arg2, workingStack, varValPair);
 				}
 
 				if ((intValue1 != null) && (intValue2 != null)) {
@@ -282,7 +249,7 @@ public class Calculator {
 				} else if (isInt(arg2)) {
 					value = getInt(arg2);
 				} else if (isOperator(arg2)) {
-					value = performOperation2(arg2, workingStack, varValPair);
+					value = performOperation(arg2, workingStack, varValPair);
 				}
 
 				arg2 = String.valueOf(value);
@@ -306,8 +273,8 @@ public class Calculator {
 
 	}
 
-	private static Integer performOperation2(String operator, ArrayDeque<String> workingStack,
-			Hashtable<String, String> varValPair) {
+	private static Integer performOperation(String operator, ArrayDeque<String> workingStack,
+			Hashtable<String, String> varValPair) throws Exception {
 
 		String arg1;
 		String arg2;
@@ -360,7 +327,7 @@ public class Calculator {
 			} else if (isInt(arg2)) {
 				value = getInt(arg2);
 			} else if (isOperator(arg2)) {
-				value = performOperation2(arg2, workingStack, varValPair);
+				value = performOperation(arg2, workingStack, varValPair);
 			}
 
 			arg2 = String.valueOf(value);
@@ -372,12 +339,127 @@ public class Calculator {
 			// do i need to check if this is a
 
 			if (isOperator(arg1)) {
-				tempResult = performOperation2(arg1, workingStack, varValPair);
+				tempResult = performOperation(arg1, workingStack, varValPair);
 			}
 
 		}
 
 		return tempResult;
+
+	}
+
+	/**
+	 * Checks to if token contains has a value of [ADD, SUB, DIV, MULT, LET]
+	 * 
+	 * @param token
+	 *            expression element
+	 * @return true if token is one of [ADD, SUB, DIV, MULT, LET], false
+	 *         otherwise
+	 */
+	static boolean isOperator(String token) {
+		return token.equalsIgnoreCase(ADD) || token.equalsIgnoreCase(SUB) || token.equalsIgnoreCase(DIV)
+				|| token.equalsIgnoreCase(MULT) || token.equalsIgnoreCase(LET);
+	}
+
+	/**
+	 * Checks to if token contains has a value of [ADD, SUB, DIV, MULT]
+	 * 
+	 * @param token
+	 *            expression element
+	 * @return true if token is one of [ADD, SUB, DIV, MULT], false otherwise
+	 */
+	static boolean isMathOperator(String token) {
+		return token.equalsIgnoreCase(ADD) || token.equalsIgnoreCase(SUB) || token.equalsIgnoreCase(DIV)
+				|| token.equalsIgnoreCase(MULT);
+	}
+
+	/**
+	 * Checks to if token contains has a value of [a-z, A-Z]
+	 * 
+	 * @param token
+	 *            expression element
+	 * @return true if token is one of [a-z, A-Z], false otherwise
+	 */
+	static boolean isVariable(String token) {
+		return (token.matches("[a-z,A-Z]"));
+	}
+
+	/**
+	 * Checks to if token is an Integer
+	 * 
+	 * @param token
+	 *            expression element
+	 * @return true if token is an Integer , false otherwise
+	 */
+	static boolean isInt(String token) {
+		boolean isInt = false;
+
+		try {
+			Integer.parseInt(token);
+			isInt = true;
+		} catch (NumberFormatException nex) {
+			// ignore
+		}
+
+		return isInt;
+	}
+
+	/**
+	 * Tries to convert the token into an Integer
+	 * 
+	 * @param token
+	 *            expression element
+	 * @return Integer value of token or null;
+	 */
+	static Integer getInt(String token) throws NumberFormatException {
+		Integer myInteger = null;
+
+		myInteger = Integer.parseInt(token);
+
+		return myInteger;
+	}
+
+	/**
+	 * 
+	 * @param operator
+	 *            one of [ADD, SUB, MULT, DIV]
+	 * @param x
+	 * @param y
+	 * @return Integer answer of (x operator y)
+	 * @throws Exception
+	 *             if operation cannot be performed
+	 */
+	private static Integer eval(String operator, Integer x, Integer y) throws Exception {
+
+		Integer answer = null;
+
+		if (operator != null || x != null || y != null) {
+
+			if (ADD.equals(operator)) {
+				answer = x + y;
+			} else if (SUB.equals(operator)) {
+				answer = x - y;
+			} else if (MULT.equals(operator)) {
+				answer = x * y;
+			} else if (DIV.equals(operator)) {
+				answer = x / y;
+			}
+		} else {
+
+			throw new Exception("Unable to evaluate " + x + " " + operator + " " + y);
+		}
+
+		return answer;
+
+	}
+
+	private static void writeErrortoConsole(String msg, Exception ex) {
+
+		if (ex == null) {
+			System.err.format("%s%n", msg);
+		} else {
+			System.err.format("Exception: %s", ex);
+		}
 
 	}
 
