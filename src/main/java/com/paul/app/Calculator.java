@@ -68,11 +68,16 @@ public class Calculator {
 
 	}
 
+	/**
+	 * Process command line arguments
+	 * 
+	 * @param args
+	 *            from main
+	 * @return String expression to be evaluated
+	 */
 	private static String processCommandLine(String[] args) {
 
 		CommandLine cmdLine = null;
-		String header = "Do something useful with an input file\n\n";
-		String footer = "\nPlease report issues at http://example.com/issues";
 		String expression = null;
 
 		HelpFormatter formatter = new HelpFormatter();
@@ -103,7 +108,8 @@ public class Calculator {
 
 		// check options passed
 		if (cmdLine.hasOption("h")) {
-			formatter.printHelp(Calculator.class.getName() + "[OPTION] + [EXPRESSION]", header, options, footer, true);
+			formatter.printHelp(Calculator.class.getName() + "[-h] [-info] [-error] [-debug] <expression>", null,
+					options, getFooter());
 		} else {
 			if (cmdLine.hasOption("error")) {
 				logger.setLevel(Level.ERROR);
@@ -118,8 +124,8 @@ public class Calculator {
 			String[] remainingArguments = cmdLine.getArgs();
 
 			if (remainingArguments.length != 1) {
-				formatter.printHelp(Calculator.class.getName() + "[OPTION] + [EXPRESSION]", header, options, footer,
-						true);
+				formatter.printHelp(Calculator.class.getName() + "[-h] [-info] [-error] [-debug] <expression>", null,
+						options, getFooter());
 			} else {
 				expression = remainingArguments[0];
 			}
@@ -461,6 +467,33 @@ public class Calculator {
 		} else {
 			System.err.format("Exception: %s", ex);
 		}
+
+	}
+
+	private static String getFooter() {
+
+		StringBuilder headerString = new StringBuilder(1000);
+
+		headerString.append("\nThis program takes in a simple integer expression in the form ");
+		headerString.append("specified below and returns the result.");
+		headerString.append("\nExamples: ");
+		headerString.append("\nadd(1, 2)");
+		headerString.append("\nadd(1, mult(2, 3))");
+		headerString.append("\nmult(add(2, 2), div(9, 3))");
+		headerString.append("\nlet(a, 5, add(a, a))");
+		headerString.append("\nlet(a, 5, let(b, mult(a, 10), add(b, a)))");
+		headerString.append("\nlet(a, let(b, 10, add(b, b)), let(b, 20, add(a, b))");
+		headerString.append("\n\nAn expression is one of the following:");
+		headerString.append("\n• Numbers: integers between Integer.MIN_VALUE and Integer.MAX_VALUE");
+		headerString.append("\n• Variables: strings of characters, where each character is one of a-z, A-Z");
+		headerString.append(
+				"\n• Arithmetic functions: add, sub, mult, div, each taking two arbitrary expressions as arguments.In other words, each argument may be any of the expressions on this list.");
+		headerString.append("\n• A “let” operator for assigning values to variables:");
+		headerString.append("\n	     let(<variable name>, <value expression>, <expression where variable is used>)");
+		headerString.append(
+				"\n\nAs with arithmetic functions, the value expression and the expression where the variable is used may be an arbitrary expression from this list.");
+
+		return headerString.toString();
 
 	}
 

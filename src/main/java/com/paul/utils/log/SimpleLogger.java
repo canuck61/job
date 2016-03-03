@@ -31,7 +31,7 @@ public class SimpleLogger {
 		String fileName = dateFormat.format(date) + ".txt";
 
 		try {
-            // do not create log file if no logging
+			// do not create log file if no logging
 			if (!(loggingLevel.equals(Level.NONE))) {
 
 				logFile = new File(fileName);
