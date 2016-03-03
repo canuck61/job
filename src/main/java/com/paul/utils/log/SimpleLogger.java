@@ -70,15 +70,18 @@ public class SimpleLogger {
 
 			if (logToWindow) {
 				if (ex == null) {
-					System.err.format("%s %s: Message %s%n", dateString, level, msg);
+					System.err.format("%s %s: %s", dateString, level, msg);
 				} else {
-					System.err.format("%s %s: Message %s%n Exception: %s", dateString, level, msg, ex);
+					System.err.format("%s %s: %s\n%s", dateString, level, msg, ex.getMessage());
+					ex.printStackTrace();
 				}
 			} else {
 				if (ex == null) {
-					printWriter.printf("%s %s: Message %s%n", dateString, level, msg);
+					printWriter.printf("%s %s: %s", dateString, level, msg);
 				} else {
-					printWriter.printf("%s %s: Message %s%n Exception: %s", dateString, level, msg, ex);
+					printWriter.printf("%s %s: %s", dateString, level, msg);
+					printWriter.println("\n" + ex.getMessage());
+					ex.printStackTrace(printWriter);
 				}
 			}
 		} catch (Exception e) {
