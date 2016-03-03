@@ -4,7 +4,7 @@ No Continuous integration was done.
 
 I have used maven for the project.
 
-To produce the jar file conatining the Calculator executable:
+To produce the jar file containing the Calculator executable:
 
 mvn clean
 mvn package
