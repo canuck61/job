@@ -109,7 +109,7 @@ public class Calculator {
 
 		// check options passed
 		if (cmdLine.hasOption("h")) {
-			formatter.printHelp(Calculator.class.getName() + "[-h] [-info] [-error] [-debug] <expression>", null,
+			formatter.printHelp(Calculator.class.getName() + "[-h] [-info] [-error] [-debug] \"<expression>\"", null,
 					options, getFooter());
 		} else {
 			if (cmdLine.hasOption("error")) {

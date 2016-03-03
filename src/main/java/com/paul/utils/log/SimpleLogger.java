@@ -77,10 +77,10 @@ public class SimpleLogger {
 				}
 			} else {
 				if (ex == null) {
-					printWriter.printf("%s %s: %s", dateString, level, msg);
+					printWriter.printf("%s %s: %s%n", dateString, level, msg);
 				} else {
-					printWriter.printf("%s %s: %s", dateString, level, msg);
-					printWriter.println("\n" + ex.getMessage());
+					printWriter.printf("%s %s: %s%n", dateString, level, msg);
+					printWriter.println(ex.getMessage());
 					ex.printStackTrace(printWriter);
 				}
 			}
