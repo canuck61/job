@@ -31,12 +31,16 @@ public class SimpleLogger {
 		String fileName = dateFormat.format(date) + ".txt";
 
 		try {
+            // do not create log file if no logging
+			if (!(loggingLevel.equals(Level.NONE))) {
 
-			logFile = new File(fileName);
-			logFile.createNewFile();
-			fileWriter = new FileWriter(logFile);
-			bufferedWriter = new BufferedWriter(fileWriter);
-			printWriter = new PrintWriter(bufferedWriter, true);
+				logFile = new File(fileName);
+				logFile.createNewFile();
+				fileWriter = new FileWriter(logFile);
+				bufferedWriter = new BufferedWriter(fileWriter);
+				printWriter = new PrintWriter(bufferedWriter, true);
+
+			}
 
 		} catch (IOException e) {
 			logToWindow = true;

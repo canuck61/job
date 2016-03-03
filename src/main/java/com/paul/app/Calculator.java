@@ -215,23 +215,18 @@ public class Calculator {
 
 				if (isVariable(arg2)) {
 					if (varValPair.containsKey(arg2)) {
-						;
 						String tempValue = varValPair.get(arg2);
 						intValue2 = getInt(tempValue);
 					}
-
 				} else if (isInt(arg2)) {
 					intValue2 = getInt(arg2);
 				} else if (isOperator(arg2)) {
 					intValue2 = performOperation(arg2, workingStack, varValPair);
 				}
 
-				if ((intValue1 != null) && (intValue2 != null)) {
-
-					// perform operation
-					Integer tempResult = eval(operator, intValue1, intValue2);
-					workingStack.push(String.valueOf(tempResult.intValue()));
-				}
+				// perform operation
+				Integer tempResult = eval(operator, intValue1, intValue2);
+				workingStack.push(String.valueOf(tempResult.intValue()));
 
 			} else if (LET.equalsIgnoreCase(element)) {
 
@@ -242,10 +237,8 @@ public class Calculator {
 				if (isVariable(arg2)) {
 					if (varValPair.containsKey(arg2)) {
 						String tempValue = varValPair.get(arg2);
-						arg2 = tempValue;
-						value = getInt(arg2);
+						value = getInt(tempValue);
 					}
-
 				} else if (isInt(arg2)) {
 					value = getInt(arg2);
 				} else if (isOperator(arg2)) {
@@ -266,13 +259,27 @@ public class Calculator {
 			String answer = workingStack.pop();
 			intAnswer = getInt(answer);
 		} else {
-			System.out.println("PROBLEM");
+			throw new Exception("No answer has been evaluated");
 		}
 
 		return intAnswer;
 
 	}
 
+	/**
+	 * 
+	 * Performs operation with operator
+	 * 
+	 * @param operator
+	 *            operation to be performed
+	 * @param workingStack
+	 *            elements of the expression in reverse polish notation
+	 * @param varValPair
+	 *            contains definition assigned variables through a "let"
+	 *            statement
+	 * @return
+	 * @throws Exception
+	 */
 	private static Integer performOperation(String operator, ArrayDeque<String> workingStack,
 			Hashtable<String, String> varValPair) throws Exception {
 
@@ -288,28 +295,28 @@ public class Calculator {
 			arg2 = workingStack.pop();
 
 			// arg1
-			if ((intValue1 = getInt(arg1)) == null) {
+			if (isInt(arg1)) {
+				intValue1 = getInt(arg1);
+			} else {
 				// see if value for variable in hash map
 				if (varValPair.containsKey(arg1)) {
 					String tempValue = varValPair.get(arg1);
-					arg1 = tempValue;
-					intValue1 = getInt(arg1);
+					intValue1 = getInt(tempValue);
 				}
 			}
 
 			// arg2
-			if ((intValue2 = getInt(arg2)) == null) {
+			if (isInt(arg2)) {
+				intValue2 = getInt(arg2);
+			} else {
 				// see if value for variable in hash map
 				if (varValPair.containsKey(arg2)) {
 					String tempValue = varValPair.get(arg2);
-					arg2 = tempValue;
-					intValue2 = getInt(arg2);
+					intValue2 = getInt(tempValue);
 				}
 			}
 
-			if ((intValue1 != null) && (intValue2 != null)) {
-				tempResult = eval(operator, intValue1, intValue2);
-			}
+			tempResult = eval(operator, intValue1, intValue2);
 
 		} else if (LET.equalsIgnoreCase(operator)) {
 
@@ -320,10 +327,8 @@ public class Calculator {
 			if (isVariable(arg2)) {
 				if (varValPair.containsKey(arg2)) {
 					String tempValue = varValPair.get(arg2);
-					arg2 = tempValue;
-					value = getInt(arg2);
+					value = getInt(tempValue);
 				}
-
 			} else if (isInt(arg2)) {
 				value = getInt(arg2);
 			} else if (isOperator(arg2)) {
@@ -334,13 +339,9 @@ public class Calculator {
 
 			varValPair.put(arg1, arg2);
 
+			// pop expression
 			arg1 = workingStack.pop();
-
-			// do i need to check if this is a
-
-			if (isOperator(arg1)) {
-				tempResult = performOperation(arg1, workingStack, varValPair);
-			}
+			tempResult = performOperation(arg1, workingStack, varValPair);
 
 		}
 
