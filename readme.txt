@@ -5,7 +5,7 @@ Password: G1i2s3n4
 
 No Continuous integration was done.
 
-I have used maven for the project
+I have used maven for the project.
 
 To produce the jar file conatining the Calculator executable:
 

@@ -98,7 +98,6 @@ public class Calculator {
 		Option info = new Option("info", "info logging level");
 		Option debug = new Option("debug", "debug logging level");
 
-		// add t option
 		options.addOption(help);
 		options.addOption(error);
 		options.addOption(info);
