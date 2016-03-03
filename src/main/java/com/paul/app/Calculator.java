@@ -44,11 +44,11 @@ public class Calculator {
 			expression = processCommandLine(args);
 
 			if (expression != null) {
-				
+
 				logger.logMessage(Level.INFO, "Input Expression: " + expression);
 
 				expressionStack = buildWorkingStack(expression);
-				
+
 				logger.logMessage(Level.INFO, "Working Stack: " + expressionStack);
 
 				answer = evaluateStack(expressionStack);
@@ -109,7 +109,7 @@ public class Calculator {
 
 		// check options passed
 		if (cmdLine.hasOption("h")) {
-			formatter.printHelp(Calculator.class.getName() + "[-h] [-info] [-error] [-debug] \"<expression>\"", null,
+			formatter.printHelp("java -jar calculator.jar " + "[-h] [-info] [-error] [-debug] \"<expression>\"", null,
 					options, getFooter());
 		} else {
 			if (cmdLine.hasOption("error")) {
@@ -155,7 +155,7 @@ public class Calculator {
 			String testing = inputExpression.replaceAll("[ ]", "");
 			testing = testing.replaceAll("[,()]+", " ");
 			String exp[] = testing.split(" ");
-			
+
 			logger.logMessage(Level.DEBUG, "Building working stack");
 
 			// put in proper order
@@ -167,7 +167,8 @@ public class Calculator {
 				// validate element types
 				if (isOperator(element) || isVariable(element) || isInt(element)) {
 					workingStack.push(element);
-					logger.logMessage(Level.DEBUG, "Pushing element on stack: " + element + " (size: " + workingStack.size() + ")");
+					logger.logMessage(Level.DEBUG,
+							"Pushing element on stack: " + element + " (size: " + workingStack.size() + ")");
 				} else {
 					logger.logMessage(Level.DEBUG, "Nonvalid element type located: " + element);
 					System.err.println("Error: Element: " + element + " is not a valid element type.");
@@ -175,7 +176,7 @@ public class Calculator {
 				}
 			}
 		}
-		
+
 		logger.logMessage(Level.DEBUG, "Finished building working stack");
 
 		return workingStack;
@@ -193,18 +194,24 @@ public class Calculator {
 	 */
 	private static Integer evaluateStack(ArrayDeque<String> workingStack) throws Exception {
 
-		String arg1;
-		String arg2;
-		Integer intValue1;
-		Integer intValue2;
-		String element;
+		String arg1 = null;
+		String arg2 = null;
+		Integer intValue1 = null;
+		Integer intValue2 = null;
+		String element = null;
 		Integer intAnswer = null;
 		Hashtable<String, String> varValPair = new Hashtable<String, String>();
 
 		while (workingStack.size() > 1) {
 
-			element = workingStack.pop();
-			logger.logMessage(Level.INFO, "Popping stack element : " + element + " (remaining size: " + workingStack.size() + ")");
+			if (workingStack.size() > 0) {
+				element = workingStack.pop();
+				logger.logMessage(Level.INFO,
+						"Popping stack element : " + element + " (remaining size: " + workingStack.size() + ")");
+			} else {
+				throw new Exception(
+						"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+			}
 
 			if (isMathOperator(element)) {
 
@@ -212,8 +219,14 @@ public class Calculator {
 				intValue1 = null;
 				intValue2 = null;
 
-				arg1 = workingStack.pop();
-				logger.logMessage(Level.INFO, "Popping stack element : " + arg1 + " (remaining size: " + workingStack.size() + ")");
+				if (workingStack.size() > 0) {
+					arg1 = workingStack.pop();
+					logger.logMessage(Level.INFO,
+							"Popping stack element : " + arg1 + " (remaining size: " + workingStack.size() + ")");
+				} else {
+					throw new Exception(
+							"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+				}
 
 				if (isVariable(arg1)) {
 					// see if value for variable in hash map
@@ -228,8 +241,14 @@ public class Calculator {
 					intValue1 = performOperation(arg1, workingStack, varValPair);
 				}
 
-				arg2 = workingStack.pop();
-				logger.logMessage(Level.INFO, "Popping stack element : " + arg2 + " (remaining size: " + workingStack.size() + ")");
+				if (workingStack.size() > 0) {
+					arg2 = workingStack.pop();
+					logger.logMessage(Level.INFO,
+							"Popping stack element : " + arg2 + " (remaining size: " + workingStack.size() + ")");
+				} else {
+					throw new Exception(
+							"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+				}
 
 				if (isVariable(arg2)) {
 					if (varValPair.containsKey(arg2)) {
@@ -246,25 +265,38 @@ public class Calculator {
 				// perform operation
 				Integer tempResult = eval(operator, intValue1, intValue2);
 				workingStack.push(String.valueOf(tempResult.intValue()));
-				logger.logMessage(Level.INFO, "Pushing element on stack: " + tempResult + " (size: " + workingStack.size() + ")");
+				logger.logMessage(Level.INFO,
+						"Pushing element on stack: " + tempResult + " (size: " + workingStack.size() + ")");
 
 			} else if (LET.equalsIgnoreCase(element)) {
 
 				Integer value = null;
-				arg1 = workingStack.pop();
-				logger.logMessage(Level.INFO, "Popping stack element : " + arg1 + " (remaining size: " + workingStack.size() + ")");
-				
-				if (!isVariable(arg1)) {
-					
-					throw new Exception("Invalid element sequence, first element after a let must always be a variable. Element located: " + arg1);
+
+				if (workingStack.size() > 0) {
+					arg1 = workingStack.pop();
+					logger.logMessage(Level.INFO,
+							"Popping stack element : " + arg1 + " (remaining size: " + workingStack.size() + ")");
+				} else {
+					throw new Exception(
+							"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
 				}
-				
-				
-				arg2 = workingStack.pop();
-				logger.logMessage(Level.INFO, "Popping stack element : " + arg2 + " (remaining size: " + workingStack.size() + ")");
-				
+
+				if (!isVariable(arg1)) {
+					throw new Exception(
+							"Invalid element sequence, first element after a let must always be a variable. Element located: "
+									+ arg1);
+				}
+
+				if (workingStack.size() > 0) {
+					arg2 = workingStack.pop();
+					logger.logMessage(Level.INFO,
+							"Popping stack element : " + arg2 + " (remaining size: " + workingStack.size() + ")");
+				} else {
+					throw new Exception(
+							"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+				}
+
 				logger.logMessage(Level.INFO, "Evaluating Expression: " + element + "(" + arg1 + "," + arg2 + ")");
-				
 
 				if (isVariable(arg2)) {
 					if (varValPair.containsKey(arg2)) {
@@ -286,13 +318,15 @@ public class Calculator {
 
 			} else {
 				workingStack.push(element);
-				logger.logMessage(Level.INFO, "Pushing element on stack: " + element + " (size: " + workingStack.size() + ")");
+				logger.logMessage(Level.INFO,
+						"Pushing element on stack: " + element + " (size: " + workingStack.size() + ")");
 			}
 		}
 
 		if (workingStack.size() == 1) {
-			String answer = workingStack.pop(); 
-			logger.logMessage(Level.INFO, "Poppping stack element : " + answer + "(remaining size: " + workingStack.size() + ")");
+			String answer = workingStack.pop();
+			logger.logMessage(Level.INFO,
+					"Poppping stack element : " + answer + "(remaining size: " + workingStack.size() + ")");
 			intAnswer = getInt(answer);
 		} else {
 			throw new Exception("All items in the stack have been evaluated and no answer has been determined.");
@@ -327,10 +361,23 @@ public class Calculator {
 
 		if (isMathOperator(operator)) {
 
-			arg1 = workingStack.pop();
-			logger.logMessage(Level.INFO, "Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
-			arg2 = workingStack.pop();
-			logger.logMessage(Level.INFO, "Poppping stack element : " + arg2 + "(remaining size: " + workingStack.size() + ")");
+			if (workingStack.size() > 0) {
+				arg1 = workingStack.pop();
+				logger.logMessage(Level.INFO,
+						"Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
+			} else {
+				throw new Exception(
+						"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+			}
+
+			if (workingStack.size() > 0) {
+				arg2 = workingStack.pop();
+				logger.logMessage(Level.INFO,
+						"Poppping stack element : " + arg2 + "(remaining size: " + workingStack.size() + ")");
+			} else {
+				throw new Exception(
+						"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+			}
 
 			logger.logMessage(Level.INFO, "Evaluating Expression: " + operator + "(" + arg1 + "," + arg2 + ")");
 
@@ -363,16 +410,31 @@ public class Calculator {
 		} else if (LET.equalsIgnoreCase(operator)) {
 
 			Integer value = null;
-			arg1 = workingStack.pop();
-			logger.logMessage(Level.INFO, "Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
-			
-			if (!isVariable(arg1)) {
-				
-				throw new Exception("Invalid element sequence, first element after a let must always be a variable. Element located: " + arg1);
+
+			if (workingStack.size() > 0) {
+				arg1 = workingStack.pop();
+				logger.logMessage(Level.INFO,
+						"Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
+			} else {
+				throw new Exception(
+						"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
 			}
-			
-			arg2 = workingStack.pop();
-			logger.logMessage(Level.INFO, "Poppping stack element : " + arg2 + "(remaining size: " + workingStack.size() + ")");
+
+			if (!isVariable(arg1)) {
+
+				throw new Exception(
+						"Invalid element sequence, first element after a let must always be a variable. Element located: "
+								+ arg1);
+			}
+
+			if (workingStack.size() > 0) {
+				arg2 = workingStack.pop();
+				logger.logMessage(Level.INFO,
+						"Poppping stack element : " + arg2 + "(remaining size: " + workingStack.size() + ")");
+			} else {
+				throw new Exception(
+						"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+			}
 
 			logger.logMessage(Level.INFO, "Evaluating Expression: " + operator + "(" + arg1 + "," + arg2 + ")");
 
@@ -394,8 +456,15 @@ public class Calculator {
 			varValPair.put(arg1, arg2);
 
 			// pop expression
-			arg1 = workingStack.pop();
-			logger.logMessage(Level.INFO, "Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
+			if (workingStack.size() > 0) {
+				arg1 = workingStack.pop();
+				logger.logMessage(Level.INFO,
+						"Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
+			} else {
+				throw new Exception(
+						"The stack is empty and the expression has not finished evaluating. Most likely cause is incorrect expression.");
+			}
+
 			tempResult = performOperation(arg1, workingStack, varValPair);
 
 		}
@@ -489,7 +558,7 @@ public class Calculator {
 
 		Integer answer = null;
 
-		if (operator != null || x != null || y != null) {
+		if (operator != null && x != null && y != null) {
 
 			if (ADD.equals(operator)) {
 				logger.logMessage(Level.INFO, "Performing Operation: " + ADD + "(" + x + "," + y + ")");
@@ -507,8 +576,14 @@ public class Calculator {
 				throw new Exception("Invalid Operator " + x + " " + operator + " " + y);
 			}
 		} else {
-
-			throw new Exception("Unable to evaluate " + x + " " + operator + " " + y);
+			
+			if (operator == null) {
+				throw new Exception("Unable to evaluate expression with arguments: " + x + "," + y + " no operator is present." );				
+			} else if (x == null) {
+				throw new Exception("Unable to evaluate expression " + operator + " " + y + " missing operand.");					
+			} else if (y == null) {
+				throw new Exception("Unable to evaluate expression " + operator + " " + x + " missing operand.");					
+			}
 		}
 
 		return answer;
@@ -521,7 +596,7 @@ public class Calculator {
 			System.err.format("%s%n", msg);
 		} else {
 			System.err.format("%s \nException: %s\n", msg, ex.getMessage());
-			 ex.printStackTrace(System.out);
+			ex.printStackTrace(System.out);
 		}
 
 	}
@@ -532,8 +607,8 @@ public class Calculator {
 
 		headerString.append("\nThis program takes in a simple integer expression in the form ");
 		headerString.append("specified below and returns the result.");
-		headerString.append("\nExamples: ");
-		headerString.append("\nadd(1, 2)");
+		headerString.append("\n\nExamples: ");
+		headerString.append("\n\nadd(1, 2)");
 		headerString.append("\nadd(1, mult(2, 3))");
 		headerString.append("\nmult(add(2, 2), div(9, 3))");
 		headerString.append("\nlet(a, 5, add(a, a))");
@@ -548,7 +623,12 @@ public class Calculator {
 		headerString.append("\n	     let(<variable name>, <value expression>, <expression where variable is used>)");
 		headerString.append(
 				"\n\nAs with arithmetic functions, the value expression and the expression where the variable is used may be an arbitrary expression from this list.");
-
+		headerString.append(
+				"\n\nLog files will be created in the directory the program is invoked in. No log file will be produced unlesss one of the log file options is set.");
+		headerString.append("\n\nInvocation examples:");
+		headerString.append("\n\njava -jar calculator.jar -h");
+		headerString.append("\njava -jar calculator.jar \"add(2,4)\"");
+		headerString.append("\njava -jar calculator.jar -info \"let(a, 5, add(a, a))\"");
 		return headerString.toString();
 
 	}
