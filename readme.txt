@@ -1,8 +1,5 @@
 Git repository is located at https://github.com/canuck61/job.git
 
-User: canuck61
-Password: G1i2s3n4
-
 No Continuous integration was done.
 
 I have used maven for the project.
