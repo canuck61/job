@@ -125,7 +125,7 @@ public class Calculator {
 			String[] remainingArguments = cmdLine.getArgs();
 
 			if (remainingArguments.length != 1) {
-				formatter.printHelp(Calculator.class.getName() + "[-h] [-info] [-error] [-debug] <expression>", null,
+				formatter.printHelp("java -jar calculator.jar " + "[-h] [-info] [-error] [-debug] \"<expression>\"", null,
 						options, getFooter());
 			} else {
 				expression = remainingArguments[0];

@@ -5,10 +5,11 @@ Password: G1i2s3n4
 
 No Continuous integration was done.
 
-Maven will produce a jar file in the target directory
+I have used maven for the project
 
 To produce the jar file conatining the Calculator executable:
 
+mvn clean
 mvn package
 
 This will produce an jar file in the target directory called:
