@@ -39,12 +39,17 @@ public class Calculator {
 		String expression = null;
 		ArrayDeque<String> expressionStack;
 
-		expression = processCommandLine(args);
+		try {
 
-		if (expression != null) {
+			expression = processCommandLine(args);
 
-			try {
+			if (expression != null) {
+				
+				logger.logMessage(Level.INFO, "Input Expression: " + expression);
+
 				expressionStack = buildWorkingStack(expression);
+				
+				logger.logMessage(Level.INFO, "Working Stack: " + expressionStack);
 
 				answer = evaluateStack(expressionStack);
 
@@ -57,13 +62,16 @@ public class Calculator {
 					writeErrortoConsole(message, null);
 					logger.logMessage(Level.ERROR, message);
 				}
-
-			} catch (Exception e) {
-				String message = "Program exited abnormally";
-				writeErrortoConsole(message, null);
-				logger.logMessage(Level.ERROR, message, e);
 			}
 
+		} catch (ParseException pex) {
+			String message = "An error occured while trying to parse the command line arguments.\n " + args;
+			writeErrortoConsole(message, null);
+			logger.logMessage(Level.ERROR, message, pex);
+		} catch (Exception e) {
+			String message = "Program exited abnormally";
+			writeErrortoConsole(message, null);
+			logger.logMessage(Level.ERROR, message, e);
 		}
 
 	}
@@ -75,7 +83,7 @@ public class Calculator {
 	 *            from main
 	 * @return String expression to be evaluated
 	 */
-	private static String processCommandLine(String[] args) {
+	private static String processCommandLine(String[] args) throws ParseException {
 
 		CommandLine cmdLine = null;
 		String expression = null;
@@ -97,14 +105,7 @@ public class Calculator {
 		options.addOption(debug);
 
 		CommandLineParser parser = new DefaultParser();
-		try {
-
-			cmdLine = parser.parse(options, args);
-
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		cmdLine = parser.parse(options, args);
 
 		// check options passed
 		if (cmdLine.hasOption("h")) {
@@ -196,6 +197,7 @@ public class Calculator {
 		while (workingStack.size() > 1) {
 
 			element = workingStack.pop();
+			logger.logMessage(Level.INFO, "Popping stack element : " + element + " (remaining size: " + workingStack.size() + ")");
 
 			if (isMathOperator(element)) {
 
@@ -204,12 +206,14 @@ public class Calculator {
 				intValue2 = null;
 
 				arg1 = workingStack.pop();
+				logger.logMessage(Level.INFO, "Popping stack element : " + arg1 + " (remaining size: " + workingStack.size() + ")");
 
 				if (isVariable(arg1)) {
 					// see if value for variable in hash map
 					if (varValPair.containsKey(arg1)) {
 						String tempValue = varValPair.get(arg1);
 						intValue1 = getInt(tempValue);
+						logger.logMessage(Level.INFO, "Getting variable from table: " + arg1 + "=" + intValue1);
 					}
 				} else if (isInt(arg1)) {
 					intValue1 = getInt(arg1);
@@ -218,11 +222,13 @@ public class Calculator {
 				}
 
 				arg2 = workingStack.pop();
+				logger.logMessage(Level.INFO, "Popping stack element : " + arg2 + " (remaining size: " + workingStack.size() + ")");
 
 				if (isVariable(arg2)) {
 					if (varValPair.containsKey(arg2)) {
 						String tempValue = varValPair.get(arg2);
 						intValue2 = getInt(tempValue);
+						logger.logMessage(Level.INFO, "Getting variable from table: " + arg2 + "=" + intValue2);
 					}
 				} else if (isInt(arg2)) {
 					intValue2 = getInt(arg2);
@@ -232,18 +238,24 @@ public class Calculator {
 
 				// perform operation
 				Integer tempResult = eval(operator, intValue1, intValue2);
+				logger.logMessage(Level.INFO, "Pushing element on stack: " + tempResult);
 				workingStack.push(String.valueOf(tempResult.intValue()));
 
 			} else if (LET.equalsIgnoreCase(element)) {
 
 				Integer value = null;
 				arg1 = workingStack.pop();
+				logger.logMessage(Level.INFO, "Popping stack element : " + arg1 + " (remaining size: " + workingStack.size() + ")");
 				arg2 = workingStack.pop();
+				logger.logMessage(Level.INFO, "Popping stack element : " + arg2 + " (remaining size: " + workingStack.size() + ")");
+				
+				logger.logMessage(Level.INFO, "Evaluating Expression: " + element + "(" + arg1 + "," + arg2 + ")");
 
 				if (isVariable(arg2)) {
 					if (varValPair.containsKey(arg2)) {
 						String tempValue = varValPair.get(arg2);
 						value = getInt(tempValue);
+						logger.logMessage(Level.INFO, "Getting variable from table: " + arg2 + "=" + value);
 					}
 				} else if (isInt(arg2)) {
 					value = getInt(arg2);
@@ -254,9 +266,11 @@ public class Calculator {
 				arg2 = String.valueOf(value);
 
 				// out name/value pair in map
+				logger.logMessage(Level.INFO, "Setting variable in table: " + arg1 + "=" + arg2);
 				varValPair.put(arg1, arg2);
 
 			} else {
+				logger.logMessage(Level.INFO, "Pushing element on stack: " + element);
 				workingStack.push(element);
 			}
 		}
@@ -298,7 +312,11 @@ public class Calculator {
 		if (isMathOperator(operator)) {
 
 			arg1 = workingStack.pop();
+			logger.logMessage(Level.INFO, "Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
 			arg2 = workingStack.pop();
+			logger.logMessage(Level.INFO, "Poppping stack element : " + arg2 + "(remaining size: " + workingStack.size() + ")");
+
+			logger.logMessage(Level.INFO, "Evaluating Expression: " + operator + "(" + arg1 + "," + arg2 + ")");
 
 			// arg1
 			if (isInt(arg1)) {
@@ -308,6 +326,7 @@ public class Calculator {
 				if (varValPair.containsKey(arg1)) {
 					String tempValue = varValPair.get(arg1);
 					intValue1 = getInt(tempValue);
+					logger.logMessage(Level.INFO, "Getting variable from table: " + arg1 + "=" + intValue1);
 				}
 			}
 
@@ -319,6 +338,7 @@ public class Calculator {
 				if (varValPair.containsKey(arg2)) {
 					String tempValue = varValPair.get(arg2);
 					intValue2 = getInt(tempValue);
+					logger.logMessage(Level.INFO, "Getting variable from table: " + arg2 + "=" + intValue2);
 				}
 			}
 
@@ -328,12 +348,17 @@ public class Calculator {
 
 			Integer value = null;
 			arg1 = workingStack.pop();
+			logger.logMessage(Level.INFO, "Poppping stack element : " + arg1 + "(remaining size: " + workingStack.size() + ")");
 			arg2 = workingStack.pop();
+			logger.logMessage(Level.INFO, "Poppping stack element : " + arg2 + "(remaining size: " + workingStack.size() + ")");
+
+			logger.logMessage(Level.INFO, "Evaluating Expression: " + operator + "(" + arg1 + "," + arg2 + ")");
 
 			if (isVariable(arg2)) {
 				if (varValPair.containsKey(arg2)) {
 					String tempValue = varValPair.get(arg2);
 					value = getInt(tempValue);
+					logger.logMessage(Level.INFO, "Getting variable from table: " + arg2 + "=" + value);
 				}
 			} else if (isInt(arg2)) {
 				value = getInt(arg2);
@@ -343,6 +368,7 @@ public class Calculator {
 
 			arg2 = String.valueOf(value);
 
+			logger.logMessage(Level.INFO, "Setting variable in table: " + arg1 + "=" + arg2);
 			varValPair.put(arg1, arg2);
 
 			// pop expression
@@ -443,12 +469,16 @@ public class Calculator {
 		if (operator != null || x != null || y != null) {
 
 			if (ADD.equals(operator)) {
+				logger.logMessage(Level.INFO, "Performing Operation: " + ADD + "(" + x + "," + y + ")");
 				answer = x + y;
 			} else if (SUB.equals(operator)) {
+				logger.logMessage(Level.INFO, "Performing Operation: " + SUB + "(" + x + "," + y + ")");
 				answer = x - y;
 			} else if (MULT.equals(operator)) {
+				logger.logMessage(Level.INFO, "Performing Operation: " + MULT + "(" + x + "," + y + ")");
 				answer = x * y;
 			} else if (DIV.equals(operator)) {
+				logger.logMessage(Level.INFO, "Performing Operation: " + DIV + "(" + x + "," + y + ")");
 				answer = x / y;
 			}
 		} else {

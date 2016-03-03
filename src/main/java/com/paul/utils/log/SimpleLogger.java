@@ -23,30 +23,9 @@ public class SimpleLogger {
 	private PrintWriter printWriter = null;
 
 	private boolean logToWindow = false;
+	private boolean logFileCreated = false;
 
-	protected SimpleLogger() {
-
-		Date date = new Date();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSZ");
-		String fileName = dateFormat.format(date) + ".txt";
-
-		try {
-			// do not create log file if no logging
-			if (!(loggingLevel.equals(Level.NONE))) {
-
-				logFile = new File(fileName);
-				logFile.createNewFile();
-				fileWriter = new FileWriter(logFile);
-				bufferedWriter = new BufferedWriter(fileWriter);
-				printWriter = new PrintWriter(bufferedWriter, true);
-
-			}
-
-		} catch (IOException e) {
-			logToWindow = true;
-			System.err.format("ERROR: Unable to Create log file: %s%n", e);
-		}
-	}
+	protected SimpleLogger() {}
 
 	public static SimpleLogger getInstance() {
 		if (instance == null) {
@@ -67,6 +46,10 @@ public class SimpleLogger {
 
 		// no logging
 		if (!(loggingLevel.equals(Level.NONE))) {
+			
+			if (!logFileCreated && !logToWindow) {
+				createLogFile();
+			}
 
 			// regardless of logging level, always log
 			if ((loggingLevel.equals(Level.DEBUG))
@@ -100,6 +83,27 @@ public class SimpleLogger {
 			}
 		} catch (Exception e) {
 			System.err.format("ERROR: Unable to write to log file: %s%n", e);
+		}
+
+	}
+	
+	protected void createLogFile() {
+		
+		Date date = new Date();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss-SSSZ");
+		String fileName = dateFormat.format(date) + ".txt";
+
+		try {
+				logFile = new File(fileName);
+				logFile.createNewFile();
+				fileWriter = new FileWriter(logFile);
+				bufferedWriter = new BufferedWriter(fileWriter);
+				printWriter = new PrintWriter(bufferedWriter, true);
+				logFileCreated = true;
+
+		} catch (IOException e) {
+			logToWindow = true;
+			System.err.format("ERROR: Unable to Create log file: %s%n", e);
 		}
 
 	}
